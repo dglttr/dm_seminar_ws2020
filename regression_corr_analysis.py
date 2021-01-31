@@ -3,8 +3,6 @@ from typing import List
 import pandas as pd
 import statsmodels.api as sm
 
-from utils import load_data
-
 
 def feature_selection(df: pd.DataFrame, threshold: float = 0.6, verbose: bool = False) -> List[str]:
     """Iteratively drop the column most explained by the other columns, until threshold is reached."""
@@ -38,20 +36,89 @@ def feature_selection(df: pd.DataFrame, threshold: float = 0.6, verbose: bool = 
 
 
 # Apply to data
-DATA_DIRECTORY = r""
+DATA_DIRECTORY = r"C:\Users\Daniel\Documents\Studium\7. Semester (WS 2020.21)\Seminar Data Mining in der Produktion\Gruppenarbeit\Data"
+
+# Load data files
+c11 = pd.read_csv(DATA_DIRECTORY + "/C11.csv")
+c13_1 = pd.read_csv(DATA_DIRECTORY + "/C13-1.csv")
+c13_2 = pd.read_csv(DATA_DIRECTORY + "/C13-2.csv")
+c14 = pd.read_csv(DATA_DIRECTORY + "/C14.csv")
+c15 = pd.read_csv(DATA_DIRECTORY + "/C15.csv")
+c16 = pd.read_csv(DATA_DIRECTORY + "/C16.csv")
+c7_1 = pd.read_csv(DATA_DIRECTORY + "/C7-1.csv")
+c7_2 = pd.read_csv(DATA_DIRECTORY + "/C7-2.csv")
+c8 = pd.read_csv(DATA_DIRECTORY + "/C8.csv")
+c9 = pd.read_csv(DATA_DIRECTORY + "/C9.csv")
+
+# Concat all data
+data = pd.concat([c11, c13_1, c13_2, c14, c15, c16, c7_1, c7_2, c8, c9])
+
+# Drop timestamp column
+data = data.drop(columns="Timestamp")
+
+# Remove NaN
+data = data.dropna()
+
 COMPONENTS = [
     ['A_1', 'A_2', 'A_3', 'A_4', 'A_5'],
     ['B_1', 'B_2', 'B_3', 'B_4', 'B_5'],
     ['C_1', 'C_2', 'C_3', 'C_4', 'C_5'],
     ['L_1', 'L_2', 'L_3', 'L_4', 'L_5', 'L_6', 'L_7', 'L_8', 'L_9', 'L_10']
 ]
+
+# Merge C13-1 and C13-2 as well as C7-1 and C7-2
+c13 = pd.concat([c13_1, c13_2])
+c7 = pd.concat([c7_1, c7_2])
+
+# Construct dictionary of files
+files = {
+    "c7": c7,
+    "c8": c8,
+    "c9": c9,
+    "c11": c11,
+    "c13": c13,
+    "c14": c14,
+    "c15": c15,
+    "c16": c16
+}
+
+# Drop timestamp column
+for key, value in files.items():
+    files[key] = value.drop(columns="Timestamp")
+
+# Remove NaN
+for key, value in files.items():
+    files[key] = value.dropna()
+
+ALL_COMPONENTS = ['A_1', 'A_2', 'A_3', 'A_4', 'A_5',
+                  'B_1', 'B_2', 'B_3', 'B_4', 'B_5',
+                  'C_1', 'C_2', 'C_3', 'C_4', 'C_5',
+                  'L_1', 'L_2', 'L_3', 'L_4', 'L_5', 'L_6', 'L_7', 'L_8', 'L_9', 'L_10'
+]
 THRESHOLD = 0.6
 
-files = load_data(DATA_DIRECTORY)
-file = pd.concat(files)     # use all files as one
-
+"""
 cols_to_include = []
 for group in COMPONENTS:
-    cols_to_include.extend(feature_selection(file[group], threshold=THRESHOLD))
+    cols_to_include.extend(feature_selection(data[group], threshold=THRESHOLD))
 
 print("Column to include: ", cols_to_include)
+"""
+
+cols_df = pd.DataFrame(columns=ALL_COMPONENTS)
+for name, data in files.items():
+    cols_to_include = []
+    for group in COMPONENTS:
+        cols_to_include.extend(feature_selection(data[group], threshold=THRESHOLD))
+
+    print(f"Experiment {name}: ", cols_to_include)
+
+    update = dict()
+    for col in cols_df.columns:
+        update[col] = 1 if (col in cols_to_include) else 0
+
+    cols_df = cols_df.append(update, ignore_index=True)
+
+print(cols_df)
+
+a = 1
