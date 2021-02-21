@@ -36,7 +36,7 @@ def feature_selection(df: pd.DataFrame, threshold: float = 0.6, verbose: bool = 
 
 
 # Apply to data
-DATA_DIRECTORY = r"C:\Users\Daniel\Documents\Studium\7. Semester (WS 2020.21)\Seminar Data Mining in der Produktion\Gruppenarbeit\Data"
+DATA_DIRECTORY = r"..."
 
 # Load data files
 c11 = pd.read_csv(DATA_DIRECTORY + "/C11.csv")
@@ -49,22 +49,6 @@ c7_1 = pd.read_csv(DATA_DIRECTORY + "/C7-1.csv")
 c7_2 = pd.read_csv(DATA_DIRECTORY + "/C7-2.csv")
 c8 = pd.read_csv(DATA_DIRECTORY + "/C8.csv")
 c9 = pd.read_csv(DATA_DIRECTORY + "/C9.csv")
-
-# Concat all data
-data = pd.concat([c11, c13_1, c13_2, c14, c15, c16, c7_1, c7_2, c8, c9])
-
-# Drop timestamp column
-data = data.drop(columns="Timestamp")
-
-# Remove NaN
-data = data.dropna()
-
-COMPONENTS = [
-    ['A_1', 'A_2', 'A_3', 'A_4', 'A_5'],
-    ['B_1', 'B_2', 'B_3', 'B_4', 'B_5'],
-    ['C_1', 'C_2', 'C_3', 'C_4', 'C_5'],
-    ['L_1', 'L_2', 'L_3', 'L_4', 'L_5', 'L_6', 'L_7', 'L_8', 'L_9', 'L_10']
-]
 
 # Merge C13-1 and C13-2 as well as C7-1 and C7-2
 c13 = pd.concat([c13_1, c13_2])
@@ -93,17 +77,21 @@ for key, value in files.items():
 ALL_COMPONENTS = ['A_1', 'A_2', 'A_3', 'A_4', 'A_5',
                   'B_1', 'B_2', 'B_3', 'B_4', 'B_5',
                   'C_1', 'C_2', 'C_3', 'C_4', 'C_5',
-                  'L_1', 'L_2', 'L_3', 'L_4', 'L_5', 'L_6', 'L_7', 'L_8', 'L_9', 'L_10'
+                  'L_1', 'L_2', 'L_3', 'L_4', 'L_5',
+                  'L_6', 'L_7', 'L_8', 'L_9', 'L_10'
+                  ]
+
+COMPONENTS = [
+    ['A_1', 'A_2', 'A_3', 'A_4', 'A_5'],
+    ['B_1', 'B_2', 'B_3', 'B_4', 'B_5'],
+    ['C_1', 'C_2', 'C_3', 'C_4', 'C_5'],
+    ['L_1', 'L_2'],
+    ['L_3', 'L_6'],
+    ['L_4', 'L_5'],
+    ['L_7', 'L_8'],
+    ['L_9', 'L_10']
 ]
-THRESHOLD = 0.6
-
-"""
-cols_to_include = []
-for group in COMPONENTS:
-    cols_to_include.extend(feature_selection(data[group], threshold=THRESHOLD))
-
-print("Column to include: ", cols_to_include)
-"""
+THRESHOLD = 0.0
 
 cols_df = pd.DataFrame(columns=ALL_COMPONENTS)
 for name, data in files.items():
@@ -119,6 +107,6 @@ for name, data in files.items():
 
     cols_df = cols_df.append(update, ignore_index=True)
 
+cols_df = cols_df.T
+cols_df["counts"] = cols_df.sum(axis="columns")
 print(cols_df)
-
-a = 1
