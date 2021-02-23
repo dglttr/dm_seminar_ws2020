@@ -6,7 +6,7 @@ import statsmodels.api as sm
 
 def feature_selection(df: pd.DataFrame, threshold: float = 0.6, verbose: bool = False) -> List[str]:
     """Iteratively drop the column most explained by the other columns, until threshold is reached."""
-    while len(df.columns) > 1:
+    while len(df.columns) > 2:
         rsquare_per_col = {}
 
         # Regression on each column individually
@@ -28,9 +28,10 @@ def feature_selection(df: pd.DataFrame, threshold: float = 0.6, verbose: bool = 
             print(f"Dropped col {col_with_max_r2} with R2 = {max_rsquared}")
             print("R2 per column:\n\t", rsquare_per_col)
 
+    df = df.iloc[:, :1]     # select first column
+
     if verbose:
         print(f"Remaining columns: {list(df.columns)}")
-        print("R2 per column:\n\t", rsquare_per_col)
 
     return list(df.columns)
 
