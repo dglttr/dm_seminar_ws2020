@@ -1,5 +1,5 @@
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import pandas as pd
 from sklearn.decomposition import PCA
@@ -34,10 +34,11 @@ def load_data(directory: str):
     return files
 
 
-def normalize_files(files: List[pd.DataFrame], normalization_norm: str):
-    column_names = files[0].columns
-    files = [sklearn.preprocessing.normalize(df, norm=normalization_norm) for df in files]
-    files = [pd.DataFrame(array, columns=column_names) for array in files]
+def normalize_files(files: Dict[str, pd.DataFrame], normalization_norm: str) -> Dict[str, pd.DataFrame]:
+    """Normalize files inplace and make sure to return pd.DataFrames"""
+    for name, df in files.items():
+        column_names = df.columns
+        files[name] = pd.DataFrame(sklearn.preprocessing.normalize(df, norm=normalization_norm), columns=column_names)
 
     return files
 
@@ -63,14 +64,15 @@ def pca_componentwise(files: List[pd.DataFrame], components: list) -> List[pd.Da
 
 
 def plot_all_experiments(datasets: list, experiment_names: list, test_train_split: float = None,
-                         savefig: str = "C:/Users/Daniel/Desktop/plot.png", ols_line: bool = False) -> None:
+                         savefig: str = "...", ols_line: bool = False,
+                         legend_kwargs: dict = None) -> None:
     fig, ax = plt.subplots(8, 1)
     fig.set_size_inches(6, 24)
 
     for i, dataset in enumerate(datasets):
             axis = ax[i]
             axis.scatter(x=dataset.index, y=dataset[0], s=1)
-            axis.set_title(f"Experiment No. {experiment_names[i]}")
+            axis.set_title(f"Experiment {experiment_names[i]}")
 
             if test_train_split is not None:    # plot vertical line
                 test_train_split_index = int(len(dataset) * test_train_split)
@@ -81,6 +83,9 @@ def plot_all_experiments(datasets: list, experiment_names: list, test_train_spli
                 y = dataset[0]
                 abline_plot(model_results=sm.OLS(y, x).fit(), ax=axis, color="black", linewidth=1)
 
+            if legend_kwargs:
+                axis.legend(**legend_kwargs)
+
     plt.tight_layout()
 
     if savefig:
@@ -88,7 +93,7 @@ def plot_all_experiments(datasets: list, experiment_names: list, test_train_spli
     plt.show()
 
 
-def test_train_split(files: List[pd.DataFrame], split: float) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
+def test_train_split(files: Dict[str, pd.DataFrame], split: float) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
     # Split train and test data -> first x% taken (not randomly)
     def split_df_not_randomly(df, split: float):
         split_index = int(len(df) * split)
