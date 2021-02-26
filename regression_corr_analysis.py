@@ -4,9 +4,15 @@ import pandas as pd
 import statsmodels.api as sm
 
 
-def feature_selection(df: pd.DataFrame, threshold: float = 0.6, verbose: bool = False) -> List[str]:
-    """Iteratively drop the column most explained by the other columns, until threshold is reached."""
-    while len(df.columns) > 2:
+def feature_selection(df: pd.DataFrame, no_columns: int = 1, threshold: float = 0.0, verbose: bool = False) -> List[str]:
+    """Iteratively drop the column most explained by the other columns, until threshold is reached.
+
+    :param df: DataFrame to select features from.
+    :param no_columns: Number of columns to select.
+    :param threshold: Set a threshold for a minimum R2 to be reached before columns are discarded.
+    :param verbose: Print internal values in each iteration.
+    """
+    while len(df.columns) > max(2, no_columns):
         rsquare_per_col = {}
 
         # Regression on each column individually
@@ -28,7 +34,9 @@ def feature_selection(df: pd.DataFrame, threshold: float = 0.6, verbose: bool = 
             print(f"Dropped col {col_with_max_r2} with R2 = {max_rsquared}")
             print("R2 per column:\n\t", rsquare_per_col)
 
-    df = df.iloc[:, :1]     # select first column
+    # if only one column should be found, select first column (the last two columns explain each other the same)
+    if no_columns == 1:
+        df = df.iloc[:, :1]
 
     if verbose:
         print(f"Remaining columns: {list(df.columns)}")
@@ -92,13 +100,12 @@ COMPONENTS = [
     ['L_7', 'L_8'],
     ['L_9', 'L_10']
 ]
-THRESHOLD = 0.0
 
 cols_df = pd.DataFrame(columns=ALL_COMPONENTS)
 for name, data in files.items():
     cols_to_include = []
     for group in COMPONENTS:
-        cols_to_include.extend(feature_selection(data[group], threshold=THRESHOLD))
+        cols_to_include.extend(feature_selection(data[group], no_columns=1))
 
     print(f"Experiment {name}: ", cols_to_include)
 
